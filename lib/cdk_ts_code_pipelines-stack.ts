@@ -1,10 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { SecretValue } from 'aws-cdk-lib';
-import { BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
+import { BuildSpec, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
 import { Artifact, Pipeline } from 'aws-cdk-lib/aws-codepipeline';
 import { CodeBuildAction, GitHubSourceAction } from 'aws-cdk-lib/aws-codepipeline-actions';
-import { CodeBuildProject } from 'aws-cdk-lib/aws-events-targets';
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
@@ -14,7 +12,7 @@ export class CdkTsCodePipelinesStack extends cdk.Stack {
 
     const pipeline = new Pipeline(this, 'Pipeline', {
       pipelineName: 'Pipeline',
-      crossAccountKeys: false
+
     });
 
     const sourceOutput = new Artifact('SourceOutput');
@@ -25,10 +23,10 @@ export class CdkTsCodePipelinesStack extends cdk.Stack {
       actions: [
         new GitHubSourceAction({
           owner: 'andrewcdowning',
-          repo: 'cdk_ts_code_pipelines',
+          repo: 'andrewcdowning/cdk_ts_code_pipelines',
           branch: 'main',
           actionName: 'PipelineSource',
-          oauthToken: SecretValue.secretsManager('github-token'),
+          oauthToken: SecretValue.secretsManager('code-pipeline-token'),
           output: sourceOutput
         })
       ]
@@ -41,10 +39,7 @@ export class CdkTsCodePipelinesStack extends cdk.Stack {
           actionName: 'SourceBuild',
           input: sourceOutput,
           project: new PipelineProject(this, 'PipelineProject', {
-            buildSpec: BuildSpec.fromSourceFilename('build-specs/cdk-buildspec.yml'),
-            environment: {
-              buildImage: LinuxBuildImage.STANDARD_1_0
-            }
+            buildSpec: BuildSpec.fromSourceFilename('./build-specs/cdk-buildspec.yml'),
           }),
           outputs: [cdkBuildOutput]
         })
