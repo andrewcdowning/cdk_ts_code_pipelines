@@ -1,7 +1,6 @@
-import { App, Stack } from "aws-cdk-lib"
-import { Budget } from "../../lib/constructs/Budget";
-import { Template } from "aws-cdk-lib/assertions"
-import { BillingStack } from "../../lib/BillingStack";
+import { App } from 'aws-cdk-lib'
+import { Template } from 'aws-cdk-lib/assertions'
+import { BillingStack } from '../../lib/BillingStack';
 
 
 test('Budget Constructs', () => {
@@ -13,7 +12,7 @@ test('Budget Constructs', () => {
     });
 
     const template = Template.fromStack(billingStack);
-    template.hasResourceProperties("AWS::Budgets::Budget", {
+    template.hasResourceProperties('AWS::Budgets::Budget', {
         Budget: {
             BudgetLimit: {
                 Amount: 100
