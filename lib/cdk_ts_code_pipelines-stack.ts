@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { SecretValue } from 'aws-cdk-lib';
-import { BuildSpec, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
+import { BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
 import { Artifact, Pipeline } from 'aws-cdk-lib/aws-codepipeline';
 import { CodeBuildAction, GitHubSourceAction } from 'aws-cdk-lib/aws-codepipeline-actions';
 import { Construct } from 'constructs';
@@ -40,6 +40,9 @@ export class CdkTsCodePipelinesStack extends cdk.Stack {
           input: sourceOutput,
           project: new PipelineProject(this, 'PipelineProject', {
             buildSpec: BuildSpec.fromSourceFilename('./build-specs/cdk-buildspec.yml'),
+            environment: {
+              buildImage: LinuxBuildImage.STANDARD_6_0
+            }
           }),
           outputs: [cdkBuildOutput]
         })
