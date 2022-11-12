@@ -23,7 +23,7 @@ export class CdkTsCodePipelinesStack extends cdk.Stack {
       actions: [
         new GitHubSourceAction({
           owner: 'andrewcdowning',
-          repo: 'andrewcdowning/cdk_ts_code_pipelines',
+          repo: 'cdk_ts_code_pipelines',
           branch: 'main',
           actionName: 'PipelineSource',
           oauthToken: SecretValue.secretsManager('code-pipeline-token'),

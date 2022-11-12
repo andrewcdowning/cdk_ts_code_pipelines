@@ -5,7 +5,8 @@ import { CdkTsCodePipelinesStack } from '../lib/cdk_ts_code_pipelines-stack';
 import { BillingStack } from '../lib/BillingStack';
 
 const app = new cdk.App();
-new CdkTsCodePipelinesStack(app, 'CdkTsCodePipelinesStack', {
+new CdkTsCodePipelinesStack(app, 'Pipeline', {
+  stackName: 'Pipeline-stack'
 
 });
 new BillingStack(app, 'CDKBillingStack', {
