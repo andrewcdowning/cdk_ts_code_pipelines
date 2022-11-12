@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { CdkTsCodePipelinesStack } from '../lib/cdk_ts_code_pipelines-stack';
+import { PipelinesStack } from '../lib/pipelines-stack';
 import { BillingStack } from '../lib/BillingStack';
 
 const app = new cdk.App();
-new CdkTsCodePipelinesStack(app, 'Pipeline', {
+new PipelinesStack(app, 'Pipeline', {
   stackName: 'Pipeline-stack'
 
 });
