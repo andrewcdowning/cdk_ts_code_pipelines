@@ -15,7 +15,7 @@ export class ServiceStack extends Stack {
 
         const lambdaFunction = new Function(this, 'ServiceLambda', {
             runtime: Runtime.NODEJS_16_X,
-            handler: 'src/lambda.jandler',
+            handler: 'src/lambda.handler',
             code: this.serviceCode,
             functionName: 'ServiceLambda'
         });
