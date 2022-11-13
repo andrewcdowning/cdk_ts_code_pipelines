@@ -249,6 +249,28 @@ Object {
                 ],
                 "RunOrder": 1,
               },
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Provider": "GitHub",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "Branch": "main",
+                  "OAuthToken": "{{resolve:secretsmanager:code-pipeline-token:SecretString:::}}",
+                  "Owner": "andrewcdowning",
+                  "PollForSourceChanges": false,
+                  "Repo": "express_lambda_cdk_pipelines",
+                },
+                "Name": "ServiceSource",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "ServiceOutput",
+                  },
+                ],
+                "RunOrder": 1,
+              },
             ],
             "Name": "Source",
           },
@@ -890,6 +912,27 @@ Object {
         ],
         "RegisterWithThirdParty": true,
         "TargetAction": "PipelineSource",
+        "TargetPipeline": Object {
+          "Ref": "PipelineC660917D",
+        },
+        "TargetPipelineVersion": 1,
+      },
+      "Type": "AWS::CodePipeline::Webhook",
+    },
+    "PipelineSourceServiceSourceWebhookResource826A437C": Object {
+      "Properties": Object {
+        "Authentication": "GITHUB_HMAC",
+        "AuthenticationConfiguration": Object {
+          "SecretToken": "{{resolve:secretsmanager:code-pipeline-token:SecretString:::}}",
+        },
+        "Filters": Array [
+          Object {
+            "JsonPath": "$.ref",
+            "MatchEquals": "refs/heads/{Branch}",
+          },
+        ],
+        "RegisterWithThirdParty": true,
+        "TargetAction": "ServiceSource",
         "TargetPipeline": Object {
           "Ref": "PipelineC660917D",
         },

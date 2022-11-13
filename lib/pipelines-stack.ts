@@ -15,7 +15,8 @@ export class PipelinesStack extends cdk.Stack {
 
     });
 
-    const sourceOutput = new Artifact('SourceOutput');
+    const cdkSourceOutput = new Artifact('SourceOutput');
+    const serviceSourceOutput = new Artifact('ServiceOutput')
     const cdkBuildOutput = new Artifact('CDKBuildOutput');
 
     pipeline.addStage({
@@ -27,7 +28,16 @@ export class PipelinesStack extends cdk.Stack {
           branch: 'main',
           actionName: 'PipelineSource',
           oauthToken: SecretValue.secretsManager('code-pipeline-token'),
-          output: sourceOutput
+          output: cdkSourceOutput
+      
+        }),
+        new GitHubSourceAction({
+          owner: 'andrewcdowning',
+          repo: 'express_lambda_cdk_pipelines',
+          branch: 'main',
+          actionName: 'ServiceSource',
+          oauthToken: SecretValue.secretsManager('code-pipeline-token'),
+          output: serviceSourceOutput
         })
       ]
     });
@@ -37,7 +47,8 @@ export class PipelinesStack extends cdk.Stack {
       actions: [
         new CodeBuildAction({
           actionName: 'SourceBuild',
-          input: sourceOutput,
+          input: cdkSourceOutput
+      ,
           project: new PipelineProject(this, 'PipelineProject', {
             buildSpec: BuildSpec.fromSourceFilename('./build-specs/cdk-buildspec.yml'),
             environment: {
