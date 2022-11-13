@@ -12,6 +12,7 @@ export class PipelinesStack extends cdk.Stack {
 
     const pipeline = new Pipeline(this, 'Pipeline', {
       pipelineName: 'Pipeline',
+      restartExecutionOnUpdate: true;
 
     });
 
