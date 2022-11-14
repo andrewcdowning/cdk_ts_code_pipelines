@@ -1,5 +1,6 @@
 import { App, StackSynthesizer } from "aws-cdk-lib";
 import { Template } from "aws-cdk-lib/assertions";
+import { BillingStack } from "../lib/BillingStack";
 import { PipelinesStack } from "../lib/pipelines-stack";
 import { ServiceStack } from "../lib/service-stack";
 
@@ -25,6 +26,35 @@ test('Adding service stage', () => {
             {}, {}, {},
             {
                 "Name": 'testStack'
+            }
+        ]
+    }));
+});
+
+
+test('Adding billing stake to stage', () => {
+    const app = new App();
+    const serviceStack = new ServiceStack(app, 'ServiceStack', {});
+    const pipelineStack = new PipelinesStack(app, 'PipelineStack');
+    const billingStack = new BillingStack(app, 'billingTest', {
+        amount: 5,
+        emailAddress: 'test@test.com',
+        threshold: 5
+    })
+
+    const stage = pipelineStack.addServiceStage(serviceStack, 'testStack');
+    pipelineStack.addBillingStackToStage(billingStack, stage)
+
+    const template = Template.fromStack(pipelineStack);
+    expect(template.hasResourceProperties("AWS::CodePipeline::Pipeline", {
+        "Stages": [
+            {}, {}, {},
+            {
+                "Actions": [
+                    {},
+                    {"Name": "BillingStack"}
+                    
+                ]
             }
         ]
     }));
