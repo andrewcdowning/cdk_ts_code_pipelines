@@ -15,7 +15,9 @@ test('Pipeline', () => {
 
 test('Adding service stage', () => {
     const app = new App();
-    const serviceStack = new ServiceStack(app, 'ServiceStack', {});
+    const serviceStack = new ServiceStack(app, 'ServiceStack', {
+        stageName: 'test'
+    });
     const pipelineStack = new PipelinesStack(app, 'PipelineStack');
 
     pipelineStack.addServiceStage(serviceStack, 'testStack');
@@ -34,7 +36,9 @@ test('Adding service stage', () => {
 
 test('Adding billing stake to stage', () => {
     const app = new App();
-    const serviceStack = new ServiceStack(app, 'ServiceStack', {});
+    const serviceStack = new ServiceStack(app, 'ServiceStack', {
+        stageName: 'test'
+    });
     const pipelineStack = new PipelinesStack(app, 'PipelineStack');
     const billingStack = new BillingStack(app, 'billingTest', {
         amount: 5,
