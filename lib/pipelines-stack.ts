@@ -3,16 +3,21 @@ import { SecretValue } from 'aws-cdk-lib';
 import { BuildEnvironmentVariableType, BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
 import { Artifact, IStage, Pipeline } from 'aws-cdk-lib/aws-codepipeline';
 import { CloudFormationCreateUpdateStackAction, CodeBuildAction, CodeBuildActionType, GitHubSourceAction } from 'aws-cdk-lib/aws-codepipeline-actions';
+import { EventField, RuleTargetInput } from 'aws-cdk-lib/aws-events';
+import { SnsTopic } from 'aws-cdk-lib/aws-events-targets';
+import { Topic } from 'aws-cdk-lib/aws-sns';
+import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Construct } from 'constructs';
 import { BillingStack } from './BillingStack';
 import { ServiceStack } from './service-stack';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+
 
 export class PipelinesStack extends cdk.Stack {
   private readonly pipeline: Pipeline;
   private readonly cdkBuildOutput: Artifact;
   private readonly serviceBuildOutput: Artifact;
   private readonly serviceSourceOutput: Artifact;
+  public readonly pipelineNotificationTopic: Topic;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -20,8 +25,12 @@ export class PipelinesStack extends cdk.Stack {
     this.pipeline = new Pipeline(this, 'Pipeline', {
       pipelineName: 'Pipeline',
       restartExecutionOnUpdate: true
-
     });
+
+    this.pipelineNotificationTopic = new Topic(this, 'PipelineNotificationTopic', {
+      topicName: 'PipelineNotificationTopic'
+    });
+    this.pipelineNotificationTopic.addSubscription(new EmailSubscription('andrew.c.downing@gmail.com'));
 
     const cdkSourceOutput = new Artifact('SourceOutput');
     this.serviceSourceOutput = new Artifact('ServiceOutput');
@@ -121,7 +130,7 @@ export class PipelinesStack extends cdk.Stack {
   };
 
   public addServiceIntegrationTest(stage: IStage, serviceEndpoint: string){
-    stage.addAction( new CodeBuildAction({
+    const action = new CodeBuildAction({
       actionName: "IntegrationTests",
       input: this.serviceSourceOutput,
       project: new PipelineProject(this, "ServiceIntegrationTests", {
@@ -138,6 +147,23 @@ export class PipelinesStack extends cdk.Stack {
       },
       type: CodeBuildActionType.TEST,
       runOrder: 2
-    }))
+    });
+
+    stage.addAction(action)
+    action.onStateChange('FailedTest', new SnsTopic(this.pipelineNotificationTopic, {
+      message: RuleTargetInput.fromText(
+        `Integration test failed.  ${EventField.fromPath('$.detail.execution-result.external-execution-url')}`
+        )}
+      ),
+      {
+        ruleName: 'IntegrationTestFailed',
+        eventPattern: {
+          detail: {
+            state: ['FAILED']
+          }
+        },
+        description: "Integration test has failed"
+      }
+    )
   };
 }
