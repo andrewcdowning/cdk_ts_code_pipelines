@@ -1,8 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { SecretValue } from 'aws-cdk-lib';
-import { BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
+import { BuildEnvironmentVariableType, BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
 import { Artifact, IStage, Pipeline } from 'aws-cdk-lib/aws-codepipeline';
-import { CloudFormationCreateUpdateStackAction, CodeBuildAction, GitHubSourceAction } from 'aws-cdk-lib/aws-codepipeline-actions';
+import { CloudFormationCreateUpdateStackAction, CodeBuildAction, CodeBuildActionType, GitHubSourceAction } from 'aws-cdk-lib/aws-codepipeline-actions';
 import { Construct } from 'constructs';
 import { BillingStack } from './BillingStack';
 import { ServiceStack } from './service-stack';
@@ -12,6 +12,7 @@ export class PipelinesStack extends cdk.Stack {
   private readonly pipeline: Pipeline;
   private readonly cdkBuildOutput: Artifact;
   private readonly serviceBuildOutput: Artifact;
+  private readonly serviceSourceOutput: Artifact;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -23,7 +24,7 @@ export class PipelinesStack extends cdk.Stack {
     });
 
     const cdkSourceOutput = new Artifact('SourceOutput');
-    const serviceSourceOutput = new Artifact('ServiceOutput');
+    this.serviceSourceOutput = new Artifact('ServiceOutput');
     this.cdkBuildOutput = new Artifact('CDKBuildOutput');
     this.serviceBuildOutput = new Artifact('ServiceBuildOutput');
 
@@ -45,7 +46,7 @@ export class PipelinesStack extends cdk.Stack {
           branch: 'main',
           actionName: 'ServiceSource',
           oauthToken: SecretValue.secretsManager('code-pipeline-token'),
-          output: serviceSourceOutput
+          output: this.serviceSourceOutput
         })
       ]
     });
@@ -66,7 +67,7 @@ export class PipelinesStack extends cdk.Stack {
         }),
         new CodeBuildAction({
           actionName: 'ServiceBuild',
-          input: serviceSourceOutput,
+          input: this.serviceSourceOutput,
           project: new PipelineProject(this, 'ServiceBuildProject', {
             buildSpec: BuildSpec.fromSourceFilename('./build-specs/service-buildspec.yml'),
             environment: {
@@ -108,7 +109,7 @@ export class PipelinesStack extends cdk.Stack {
        })
       ]
     })
-  }
+  };
 
   public addBillingStackToStage(billingStack: BillingStack, stage: IStage) {
     stage.addAction( new CloudFormationCreateUpdateStackAction({
@@ -117,5 +118,26 @@ export class PipelinesStack extends cdk.Stack {
       templatePath: this.cdkBuildOutput.atPath(`${billingStack.stackName}.template.json`),
       adminPermissions: true
     }))
-  }
+  };
+
+  public addServiceIntegrationTest(stage: IStage, serviceEndpoint: string){
+    stage.addAction( new CodeBuildAction({
+      actionName: "IntegrationTests",
+      input: this.serviceSourceOutput,
+      project: new PipelineProject(this, "ServiceIntegrationTests", {
+        environment: {
+          buildImage: LinuxBuildImage.STANDARD_6_0
+        },
+        buildSpec: BuildSpec.fromSourceFilename("build-specs/integ-build-spec.yml")
+      }),
+      environmentVariables: {
+        SERVICE_ENDPOINT: {
+          value: serviceEndpoint,
+          type: BuildEnvironmentVariableType.PLAINTEXT
+        }
+      },
+      type: CodeBuildActionType.TEST,
+      runOrder: 2
+    }))
+  };
 }
