@@ -446,6 +446,22 @@ Object {
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
+    "PipelineNotificationTopicD4036329": Object {
+      "Properties": Object {
+        "TopicName": "PipelineNotificationTopic",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelineNotificationTopicandrewcdowninggmailcomB91129E2": Object {
+      "Properties": Object {
+        "Endpoint": "andrew.c.downing@gmail.com",
+        "Protocol": "email",
+        "TopicArn": Object {
+          "Ref": "PipelineNotificationTopicD4036329",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
     "PipelinePipelineUpdateCodePipelineActionRole410A976B": Object {
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
