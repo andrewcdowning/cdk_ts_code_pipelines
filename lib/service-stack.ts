@@ -6,6 +6,7 @@ import { LambdaDeploymentConfig, LambdaDeploymentGroup } from "aws-cdk-lib/aws-c
 import { CfnOutcome } from "aws-cdk-lib/aws-frauddetector";
 import { Alias, CfnParametersCode, Code, Function, Runtime, Version } from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
+import { ServiceHealthCanary } from "./constructs/ServiceHealthCanary";
 
 
 export interface ServiceStackProps extends StackProps{
@@ -60,6 +61,11 @@ export class ServiceStack extends Stack {
                         treatMissingData: TreatMissingData.NOT_BREACHING
                     })
                 ]
+            });
+
+            new ServiceHealthCanary(this, 'ServiceCanary', {
+                apiEndpoint: proxyApi.apiEndpoint,
+                canaryName: 'service-canary'
             });
         };
 
