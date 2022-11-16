@@ -5,6 +5,9 @@ import { Statistic, TreatMissingData } from "aws-cdk-lib/aws-cloudwatch";
 import { LambdaDeploymentConfig, LambdaDeploymentGroup } from "aws-cdk-lib/aws-codedeploy";
 import { CfnOutcome } from "aws-cdk-lib/aws-frauddetector";
 import { Alias, CfnParametersCode, Code, Function, Runtime, Version } from "aws-cdk-lib/aws-lambda";
+import { EmailEncoding } from "aws-cdk-lib/aws-ses-actions";
+import { Topic } from "aws-cdk-lib/aws-sns";
+import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
 import { Construct } from "constructs";
 import { ServiceHealthCanary } from "./constructs/ServiceHealthCanary";
 
@@ -63,9 +66,16 @@ export class ServiceStack extends Stack {
                 ]
             });
 
+            const serviceAlarmTopic = new Topic(this, 'ServiceAlarmTopic', {
+                topicName: 'ServiceAlarmTopic'
+            });
+
+            serviceAlarmTopic.addSubscription(new EmailSubscription('andrew.c.downing@gmail.com'))
+
             new ServiceHealthCanary(this, 'ServiceCanary', {
                 apiEndpoint: proxyApi.apiEndpoint,
-                canaryName: 'service-canary'
+                canaryName: 'service-canary',
+                alarmTopic: serviceAlarmTopic
             });
         };
 
